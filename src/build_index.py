@@ -4,7 +4,9 @@ from collections import defaultdict
 from array import array
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
-from Tweet import Tweet
+
+
+
 
 def build_terms(line):
     """

@@ -1,7 +1,9 @@
 import json
-from User import User
-from Tweet import Tweet
+
+from .models import User
+from .models import Tweet
 # Assuming Tweet and User classes are already defined as above
+
 
 # Function to load the JSON file
 def load_tweets_from_json(file_path):
