@@ -1,7 +1,7 @@
 import json
 
-from .models import User
-from .models import Tweet
+from .models.User import User
+from .models.Tweet import Tweet
 # Assuming Tweet and User classes are already defined as above
 
 

@@ -6,8 +6,6 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 
 
-
-
 def build_terms(line):
     """
     Argument:
