@@ -6,7 +6,7 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 
 
-def build_terms(line):
+def build_terms(line): #NECESITA REVISARSE!!!!!!
     """
     Argument:
     line -- string (tweet text) to be preprocessed
@@ -14,9 +14,12 @@ def build_terms(line):
     Returns:
     A list of tokens corresponding to the input text after preprocessing.
     """
+    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~' #Does not include hashtag or point (for urls)
+    
     stemmer = PorterStemmer()
     stop_words = set(stopwords.words("english"))
-    line = line.lower()  # Transform to lowercase
+    line = line.lower()  # Convert letters to lowercase
+    line = line.translate(str.maketrans("", "", symbols_to_remove)) #Remove desired punctuation symbols
     line = line.split()  # Tokenize the text
     line = [word for word in line if word not in stop_words]  # Remove stopwords
     line = [stemmer.stem(word) for word in line]  # Perform stemming
