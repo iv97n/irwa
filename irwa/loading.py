@@ -1,7 +1,8 @@
 import json
-
 from .models import User
 from .models import Tweet
+import pandas as pd
+import irwa.build_index as ibi
 # Assuming Tweet and User classes are already defined as above
 
 
@@ -95,3 +96,31 @@ def load_all_tweets(file_path):
         return []
     return [create_tweet(tweet) for tweet in tweets_data]
 
+def create_tokenized_dictionary(tweets, csv_file_path):
+    """
+    Create a dictionary with doc_ids as keys and tokenized content as values,
+    using only the tweets that appear in the provided CSV file.
+
+    Arguments:
+    json_file_path -- path to the JSON file containing tweets
+    csv_file_path -- path to the CSV file containing doc_id and tweet_id
+
+    Returns:
+    tokenized_dict -- dictionary mapping doc_ids to tokenized content
+    """
+    # Load the mapping of doc_id to tweet_id from the CSV file
+    tweet_mapping = pd.read_csv(csv_file_path)
+
+    # Create tokenized dictionary with doc_id as key
+    tokenized_dict = {}
+    for _, row in tweet_mapping.iterrows():
+        doc_id = row['docId']
+        tweet_id = row['id']
+        
+        # Find the corresponding tweet by tweet_id
+        for tweet in tweets:
+            if tweet._tweet_id == tweet_id:
+                tokenized_dict[doc_id] = ibi.build_terms(tweet._content)
+                break  # Stop searching after finding the tweet
+
+    return tokenized_dict
