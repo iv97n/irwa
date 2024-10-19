@@ -17,52 +17,12 @@ def load_tweets_from_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
             try:
-                tweet = json.loads(line.strip())  # Load each line as a JSON object
+                json_tweet = json.loads(line.strip()) 
+                tweet = Tweet.parse_json_tweet(json_tweet)
                 tweets.append(tweet)
             except json.JSONDecodeError as e:
                 print(f"Error decoding JSON: {e} - Line: {line.strip()}")
     return tweets
-
-
-# Function to create a Tweet object from JSON data
-def create_tweet(tweet_data):
-    
-    # Handle retweeted and quoted tweets if they exist
-    retweeted_tweet = create_tweet(tweet_data['retweetedTweet']) if tweet_data.get('retweetedTweet') else None
-    quoted_tweet = create_tweet(tweet_data['quotedTweet']) if tweet_data.get('quotedTweet') else None
-
-    return Tweet(
-        url=tweet_data.get('url', ''),
-        date=tweet_data.get('date', ''),
-        content=tweet_data.get('content', ''),
-        rendered_content=tweet_data.get('renderedContent', ''),
-        tweet_id=tweet_data.get('id', ''),
-        user=tweet_data.get('user', ''),
-        outlinks=tweet_data.get('outlinks', []),
-        tcooutlinks=tweet_data.get('tcooutlinks', []),
-        reply_count=tweet_data.get('replyCount', 0),
-        retweet_count=tweet_data.get('retweetCount', 0),
-        like_count=tweet_data.get('likeCount', 0),
-        quote_count=tweet_data.get('quoteCount', 0),
-        conversation_id=tweet_data.get('conversationId', ''),
-        lang=tweet_data.get('lang', ''),
-        source=tweet_data.get('source', ''),
-        source_url=tweet_data.get('sourceUrl', ''),
-        source_label=tweet_data.get('sourceLabel', ''),
-        media=tweet_data.get('media', []),
-        retweeted_tweet=retweeted_tweet,  # Assign retweeted tweet object (if any)
-        quoted_tweet=quoted_tweet,  # Assign quoted tweet object (if any)
-        mentioned_users=tweet_data.get('mentionedUsers', ''),
-    )
-
-
-# Function to load all tweets
-def load_all_tweets(file_path):
-    tweets_data = load_tweets_from_json(file_path)
-    if tweets_data is None:
-        print("No tweets loaded from the file.")
-        return []
-    return [create_tweet(tweet) for tweet in tweets_data]
 
 
 # Auxiliary function that does text preprocessing
