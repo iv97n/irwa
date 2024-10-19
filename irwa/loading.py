@@ -1,90 +1,25 @@
 import json
-import pandas as pd
-import nltk
-import re
-try:
-    nltk.data.find('corpora/stopwords.zip')
-except LookupError:
-    nltk.download('stopwords')
-from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
 from .models import Tweet
 
 
 # Function to load the JSON file
 def load_tweets_from_json(file_path):
-    tweets = []
+    """Function to load the tweets from the json file into a dictionary of key: tweet id, value: tweet object
+
+    Args:
+        file_path (string): Path to the json file
+
+    Returns:
+        Dict[int, Tweet]: Dictionary mapping tweet ids to tweet objects. It allows fast retrieval of tweets when indexing by id.
+    """
+    tweets = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
             try:
-                json_tweet = json.loads(line.strip()) 
-                tweet = Tweet.parse_json_tweet(json_tweet)
-                tweets.append(tweet)
+                # Load the json string into a dictionary
+                dict_tweet = json.loads(line.strip()) 
+                # Create a new instance of the Tweet class and add it to the dictionary of tweets
+                tweets[dict_tweet['id']] = Tweet.dict_tweet(dict_tweet)
             except json.JSONDecodeError as e:
-                print(f"Error decoding JSON: {e} - Line: {line.strip()}")
+                print(f"Invalid JSON format: {e} - Line: {line.strip()}")
     return tweets
-
-
-# Auxiliary function that does text preprocessing
-def build_terms(line): 
-    """
-    Argument:
-    line -- string (tweet text) to be preprocessed
-
-    Returns:
-    A list of tokens corresponding to the input text after preprocessing.
-    """
-    
-    stemmer = PorterStemmer()
-    stop_words = set(stopwords.words("english"))
-    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.' #Does not include hashtag for future purposes
-    url_pattern = re.compile(r'http\S+|www\S+')
-
-
-    line = line.lower()  # Convert letters to lowercase
-    
-    urls = url_pattern.findall(line) # Find urls, save for latter and substitute with nothing
-    line = url_pattern.sub('', line)
-
-    line = line.translate(str.maketrans("", "", symbols_to_remove)) #Remove desired punctuation symbols
-    line = line.split()  # Tokenize the text
-    line = [word for word in line if word not in stop_words]  # Remove stopwords
-    line = [stemmer.stem(word) for word in line]  # Perform stemming
-    
-    line.extend(urls) #Add all found urls at the end
-    
-    return line
-
-
-# Function to preprocesses tweets and maps them to a doc_id
-def create_tokenized_dictionary(tweets, csv_file_path):
-    """    
-    Create a dictionary that maps document IDs to the tokenized content of tweets.
-    
-    This function processes a list of tweet objects and a CSV file containing 
-    mappings of document IDs to tweet IDs. It tokenizes the content of tweets 
-    based on the provided mapping and stores the results in a dictionary.
-    
-    Arguments:
-    tweets -- a list of tweet objects, where each tweet object has '_tweet_id' and '_content' attributes
-    csv_file_path -- path to the CSV file containing 'docId' and 'id' columns, where 'id' corresponds to tweet_id
-
-    Returns:
-    tokenized_dict -- a dictionary with doc_ids as keys and tokenized tweet content as values
-    """
-    # Load the mapping of doc_id to tweet_id from the CSV file
-    tweet_mapping = pd.read_csv(csv_file_path)
-
-    # Create tokenized dictionary with doc_id as key
-    tokenized_dict = {}
-    for _, row in tweet_mapping.iterrows():
-        doc_id = row['docId']
-        tweet_id = row['id']
-        
-        # Find the corresponding tweet by tweet_id
-        for tweet in tweets:
-            if tweet._tweet_id == tweet_id:
-                tokenized_dict[doc_id] = build_terms(tweet._content)
-                break  # Stop searching after finding the tweet
-
-    return tokenized_dict

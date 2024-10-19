@@ -1,3 +1,5 @@
+import json
+
 class Tweet:
     def __init__(self, url, date, content, rendered_content, tweet_id, user, outlinks, tcooutlinks, reply_count, 
                  retweet_count, like_count, quote_count, conversation_id, lang, source, source_url, 
@@ -25,31 +27,39 @@ class Tweet:
         self._mentioned_users = mentioned_users if mentioned_users else []  # In the future can be implemented as a list of User objects
 
     @classmethod
-    def parse_json_tweet(cls, json_tweet_data):
+    def dict_tweet(cls, tweet_dict):
+        """Alternative constructor for creating Tweet instances from a tweet dictionary
+
+        Args:
+            tweet_dict (Dict): Dictionary containing the tweet information
+
+        Returns:
+            Tweet: Tweet instance
+        """
         # Handle retweeted and quoted tweets if they exist
-        retweeted_tweet = cls.parse_tweet(json_tweet_data['retweetedTweet']) if json_tweet_data.get('retweetedTweet') else None
-        quoted_tweet = cls.parse_tweet(json_tweet_data['quotedTweet']) if json_tweet_data.get('quotedTweet') else None
+        retweeted_tweet = cls.dict_tweet(tweet_dict['retweetedTweet']) if tweet_dict.get('retweetedTweet') else None
+        quoted_tweet = cls.dict_tweet(tweet_dict['quotedTweet']) if tweet_dict.get('quotedTweet') else None
 
         return cls(
-            url=json_tweet_data.get('url', ''),
-            date=json_tweet_data.get('date', ''),
-            content=json_tweet_data.get('content', ''),
-            rendered_content=json_tweet_data.get('renderedContent', ''),
-            tweet_id=json_tweet_data.get('id', ''),
-            user=json_tweet_data.get('user', ''),
-            outlinks=json_tweet_data.get('outlinks', []),
-            tcooutlinks=json_tweet_data.get('tcooutlinks', []),
-            reply_count=json_tweet_data.get('replyCount', 0),
-            retweet_count=json_tweet_data.get('retweetCount', 0),
-            like_count=json_tweet_data.get('likeCount', 0),
-            quote_count=json_tweet_data.get('quoteCount', 0),
-            conversation_id=json_tweet_data.get('conversationId', ''),
-            lang=json_tweet_data.get('lang', ''),
-            source=json_tweet_data.get('source', ''),
-            source_url=json_tweet_data.get('sourceUrl', ''),
-            source_label=json_tweet_data.get('sourceLabel', ''),
-            media=json_tweet_data.get('media', []),
+            url=tweet_dict.get('url', ''),
+            date=tweet_dict.get('date', ''),
+            content=tweet_dict.get('content', ''),
+            rendered_content=tweet_dict.get('renderedContent', ''),
+            tweet_id=tweet_dict.get('id', ''),
+            user=tweet_dict.get('user', ''),
+            outlinks=tweet_dict.get('outlinks', []),
+            tcooutlinks=tweet_dict.get('tcooutlinks', []),
+            reply_count=tweet_dict.get('replyCount', 0),
+            retweet_count=tweet_dict.get('retweetCount', 0),
+            like_count=tweet_dict.get('likeCount', 0),
+            quote_count=tweet_dict.get('quoteCount', 0),
+            conversation_id=tweet_dict.get('conversationId', ''),
+            lang=tweet_dict.get('lang', ''),
+            source=tweet_dict.get('source', ''),
+            source_url=tweet_dict.get('sourceUrl', ''),
+            source_label=tweet_dict.get('sourceLabel', ''),
+            media=tweet_dict.get('media', []),
             retweeted_tweet=retweeted_tweet,
             quoted_tweet=quoted_tweet,
-            mentioned_users=json_tweet_data.get('mentionedUsers', ''),
+            mentioned_users=tweet_dict.get('mentionedUsers', ''),
         )
