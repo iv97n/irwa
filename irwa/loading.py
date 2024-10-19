@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import nltk
+import re
 try:
     nltk.data.find('corpora/stopwords.zip')
 except LookupError:
@@ -73,15 +74,25 @@ def build_terms(line):
     Returns:
     A list of tokens corresponding to the input text after preprocessing.
     """
-    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~' #Does not include hashtag or point (for urls) - #NECESITA REVISARSE!!!!!!
     
     stemmer = PorterStemmer()
     stop_words = set(stopwords.words("english"))
+    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.' #Does not include hashtag for future purposes
+    url_pattern = re.compile(r'http\S+|www\S+')
+
+
     line = line.lower()  # Convert letters to lowercase
+    
+    urls = url_pattern.findall(line) # Find urls, save for latter and substitute with nothing
+    line = url_pattern.sub('', line)
+
     line = line.translate(str.maketrans("", "", symbols_to_remove)) #Remove desired punctuation symbols
     line = line.split()  # Tokenize the text
     line = [word for word in line if word not in stop_words]  # Remove stopwords
     line = [stemmer.stem(word) for word in line]  # Perform stemming
+    
+    line.extend(urls) #Add all found urls at the end
+    
     return line
 
 
@@ -113,7 +124,7 @@ def create_tokenized_dictionary(tweets, csv_file_path):
         # Find the corresponding tweet by tweet_id
         for tweet in tweets:
             if tweet._tweet_id == tweet_id:
-                tokenized_dict[doc_id] = ibi.build_terms(tweet._content)
+                tokenized_dict[doc_id] = build_terms(tweet._content)
                 break  # Stop searching after finding the tweet
 
     return tokenized_dict
