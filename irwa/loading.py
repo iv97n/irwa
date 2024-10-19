@@ -1,9 +1,14 @@
 import json
-from .models import User
-from .models import Tweet
 import pandas as pd
-import irwa.build_index as ibi
-# Assuming Tweet and User classes are already defined as above
+import nltk
+import re
+try:
+    nltk.data.find('corpora/stopwords.zip')
+except LookupError:
+    nltk.download('stopwords')
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+from .models import Tweet
 
 
 # Function to load the JSON file
@@ -19,55 +24,20 @@ def load_tweets_from_json(file_path):
     return tweets
 
 
-# Function to create a User object from JSON data
-def create_user(user_data):
-    return User(
-        username=user_data['username'],
-        displayname=user_data['displayname'],
-        user_id=user_data['id'],
-        description=user_data['description'],
-        raw_description=user_data['rawDescription'],
-        description_urls=user_data.get('descriptionUrls', []),
-        verified=user_data['verified'],
-        created=user_data['created'],
-        followers_count=user_data['followersCount'],
-        friends_count=user_data['friendsCount'],
-        statuses_count=user_data['statusesCount'],
-        favourites_count=user_data['favouritesCount'],
-        listed_count=user_data['listedCount'],
-        media_count=user_data['mediaCount'],
-        location=user_data.get('location', ''),
-        protected=user_data['protected'],
-        link_url=user_data.get('linkUrl', ''),
-        link_tco_url=user_data.get('linkTcourl', ''),
-        profile_image_url=user_data['profileImageUrl'],
-        profile_banner_url=user_data.get('profileBannerUrl', ''),
-        url=user_data.get('url', '')
-    )
-
 # Function to create a Tweet object from JSON data
 def create_tweet(tweet_data):
-    # Create User object
-    user = create_user(tweet_data['user']) if tweet_data.get('user') else None  # Handle missing user
-
+    
     # Handle retweeted and quoted tweets if they exist
     retweeted_tweet = create_tweet(tweet_data['retweetedTweet']) if tweet_data.get('retweetedTweet') else None
     quoted_tweet = create_tweet(tweet_data['quotedTweet']) if tweet_data.get('quotedTweet') else None
 
-    # Handle mentioned users, ensuring it's an empty list if None
-
-    mentioned_users_data = tweet_data.get('mentionedUsers', [])
-    if mentioned_users_data != None:
-        mentioned_users = [create_user(user) for user in mentioned_users_data if user]  # Create User objects for mentioned users
-    else:
-        mentioned_users = None
     return Tweet(
         url=tweet_data.get('url', ''),
         date=tweet_data.get('date', ''),
         content=tweet_data.get('content', ''),
         rendered_content=tweet_data.get('renderedContent', ''),
         tweet_id=tweet_data.get('id', ''),
-        user=user,  # Assign the User object
+        user=tweet_data.get('user', ''),
         outlinks=tweet_data.get('outlinks', []),
         tcooutlinks=tweet_data.get('tcooutlinks', []),
         reply_count=tweet_data.get('replyCount', 0),
@@ -82,10 +52,8 @@ def create_tweet(tweet_data):
         media=tweet_data.get('media', []),
         retweeted_tweet=retweeted_tweet,  # Assign retweeted tweet object (if any)
         quoted_tweet=quoted_tweet,  # Assign quoted tweet object (if any)
-        mentioned_users=mentioned_users  # List of mentioned users
+        mentioned_users=tweet_data.get('mentionedUsers', ''),
     )
-
-
 
 
 # Function to load all tweets
@@ -96,17 +64,53 @@ def load_all_tweets(file_path):
         return []
     return [create_tweet(tweet) for tweet in tweets_data]
 
-def create_tokenized_dictionary(tweets, csv_file_path):
-    """
-    Create a dictionary with doc_ids as keys and tokenized content as values,
-    using only the tweets that appear in the provided CSV file.
 
-    Arguments:
-    json_file_path -- path to the JSON file containing tweets
-    csv_file_path -- path to the CSV file containing doc_id and tweet_id
+# Auxiliary function that does text preprocessing
+def build_terms(line): 
+    """
+    Argument:
+    line -- string (tweet text) to be preprocessed
 
     Returns:
-    tokenized_dict -- dictionary mapping doc_ids to tokenized content
+    A list of tokens corresponding to the input text after preprocessing.
+    """
+    
+    stemmer = PorterStemmer()
+    stop_words = set(stopwords.words("english"))
+    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.' #Does not include hashtag for future purposes
+    url_pattern = re.compile(r'http\S+|www\S+')
+
+
+    line = line.lower()  # Convert letters to lowercase
+    
+    urls = url_pattern.findall(line) # Find urls, save for latter and substitute with nothing
+    line = url_pattern.sub('', line)
+
+    line = line.translate(str.maketrans("", "", symbols_to_remove)) #Remove desired punctuation symbols
+    line = line.split()  # Tokenize the text
+    line = [word for word in line if word not in stop_words]  # Remove stopwords
+    line = [stemmer.stem(word) for word in line]  # Perform stemming
+    
+    line.extend(urls) #Add all found urls at the end
+    
+    return line
+
+
+# Function to preprocesses tweets and maps them to a doc_id
+def create_tokenized_dictionary(tweets, csv_file_path):
+    """    
+    Create a dictionary that maps document IDs to the tokenized content of tweets.
+    
+    This function processes a list of tweet objects and a CSV file containing 
+    mappings of document IDs to tweet IDs. It tokenizes the content of tweets 
+    based on the provided mapping and stores the results in a dictionary.
+    
+    Arguments:
+    tweets -- a list of tweet objects, where each tweet object has '_tweet_id' and '_content' attributes
+    csv_file_path -- path to the CSV file containing 'docId' and 'id' columns, where 'id' corresponds to tweet_id
+
+    Returns:
+    tokenized_dict -- a dictionary with doc_ids as keys and tokenized tweet content as values
     """
     # Load the mapping of doc_id to tweet_id from the CSV file
     tweet_mapping = pd.read_csv(csv_file_path)
@@ -120,7 +124,7 @@ def create_tokenized_dictionary(tweets, csv_file_path):
         # Find the corresponding tweet by tweet_id
         for tweet in tweets:
             if tweet._tweet_id == tweet_id:
-                tokenized_dict[doc_id] = ibi.build_terms(tweet._content)
+                tokenized_dict[doc_id] = build_terms(tweet._content)
                 break  # Stop searching after finding the tweet
 
     return tokenized_dict

@@ -7,7 +7,7 @@ class Tweet:
         self._content = content
         self._rendered_content = rendered_content
         self._tweet_id = tweet_id
-        self._user = user  # User object
+        self._user = user  # In the future can be implemented as a user object
         self._outlinks = outlinks
         self._tcooutlinks = tcooutlinks
         self._reply_count = reply_count
@@ -22,7 +22,7 @@ class Tweet:
         self._media = media
         self._retweeted_tweet = retweeted_tweet  # Another Tweet object if this is a retweet
         self._quoted_tweet = quoted_tweet  # Another Tweet object if this is a quote
-        self._mentioned_users = mentioned_users if mentioned_users else []  # List of User objects
+        self._mentioned_users = mentioned_users if mentioned_users else []  # In the future can be implemented as a list of User objects
 
     # Getters
     def get_url(self):
