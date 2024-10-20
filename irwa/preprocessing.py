@@ -9,8 +9,15 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 
 
-# Auxiliary function that does text preprocessing
-def build_terms(line): 
+def build_terms(line):
+    """Prepocessing and tokenization of the tweets
+
+    Args:
+        line (str): tweet content
+
+    Returns:
+        List[str]: tokenized tweet content list
+    """
     stemmer = PorterStemmer()
     stop_words = set(stopwords.words("english"))
     symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.' #Does not include hashtag for future purposes
@@ -36,11 +43,11 @@ def create_tokenized_dictionary(tweets, csv_file_path):
     """Function to preprocesses tweets and maps them to a doc_id
 
     Args:
-        tweets (_type_): _description_
-        csv_file_path (_type_): _description_
+        tweets (Dict[id, Tweet]): dicitonary containing the mapping between tweet ids and tweet objects
+        csv_file_path (str): path to the mapping csv
 
     Returns:
-        _type_: _description_
+        Dict[str, List[str]]: dicitonary mapping from document id to the tokenized tweet content
     """
     # Load the mapping of doc_id to tweet_id from the CSV file
     tweet_mapping = pd.read_csv(csv_file_path)

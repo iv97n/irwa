@@ -2,7 +2,6 @@ import json
 from .models import Tweet
 
 
-# Function to load the JSON file
 def load_tweets_from_json(file_path):
     """Function to load the tweets from the json file into a dictionary of key: tweet id, value: tweet object
 
