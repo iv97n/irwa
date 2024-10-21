@@ -8,6 +8,8 @@ part of the Mathematical Engineering in Data Science degree at Pompeu Fabra Univ
 ## Usage
 The code is executed from the python notebooks located in the ``notebooks/`` folder. To run the code you will need to install the dependencies specified in the ``requirements.txt``file.  
 
+The data folder is empty by default. To use the code you will need to populate it with the corresponding files.
+
 Here is a step by step example of how to run the code using _Jupyter Notebook_ and _venv_. Other editors such as Visual Studio are also suitable options for running the code.
 
 ### Step 1: Git clone the repository to your local system
