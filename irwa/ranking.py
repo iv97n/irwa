@@ -16,10 +16,13 @@ def tf_idf(inverted_index, query, token_tweets):
 
     return dict(scores)
 
-def sort_scores_tf_idf(scores, n=10):
+def sort_scores_tf_idf(scores, docid_to_tweetid,tweets, n=10):
     sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
     
     # Display the top n results
     print(f"Top {n} Results:")
     for doc_id, score in sorted_scores[:n]:
+        tweet_id = docid_to_tweetid[doc_id]
+        original_tweet_content = tweets[tweet_id]._content
         print(f"Document {doc_id}: {score}")
+        print(f"Content: {original_tweet_content}")

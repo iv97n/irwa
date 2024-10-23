@@ -54,10 +54,14 @@ def create_tokenized_dictionary(tweets, csv_file_path):
 
     # Create tokenized dictionary with doc_id as key
     tokenized_dict = {}
+    docid_to_tweetid = {}
+
     for _, row in tweet_mapping.iterrows():
         doc_id = row['docId']
         tweet_id = row['id']
         if tweet_id in tweets:
             tokenized_dict[doc_id] = build_terms(tweets[tweet_id]._content)
+            docid_to_tweetid[doc_id] = tweet_id
 
-    return tokenized_dict
+
+    return docid_to_tweetid, tokenized_dict
