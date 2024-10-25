@@ -8,12 +8,13 @@ def tf_idf(inverted_index, query, token_tweets):
     # For each term in the query
     for term in query:
         if term in inverted_index:
-            df = len(inverted_index[term])              # Document Frequency of the term
-            idf = math.log(N / df)                      # Inverse Document Frequency
-            for doc_id in inverted_index[term]:
-                tf = token_tweets[doc_id].count(term)   # Term Frequency in the document
-                scores[doc_id] += tf * idf              # Calculate and accumulate tf-idf score
-
+            df = len(inverted_index[term])              # Document Frequency of the term --> en cuántos documentos aparece palabra de la query
+            idf = math.log(N / df)                      # Inverse Document Frequency --> modificación por razones matemáticas del df
+            
+            for doc_id in inverted_index[term]:         # Para todos los documentos en los que aparece la palabra de la query
+                tf = token_tweets[doc_id].count(term)   # Term Frequency in the document --> contar cuantas veces aparece por documento
+                scores[doc_id] += tf * idf              # Calculate and accumulate tf-idf score --> tf (numero de apariciones en documento) * idf (valor igual para todos los documentos)
+                                                        # Al repetir el proceso para mas palabras, acumulamos el score total del documento es decir sum_todas_palabras_query(tf*idf de cada palabra)
     return dict(scores)
 
 def sort_scores_tf_idf(scores, docid_to_tweetid,tweets, n=10):
