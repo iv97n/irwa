@@ -3,7 +3,8 @@
 
 ## TL;DR
 This repository contains the implementation of a search engine for the Information Retrieval and Web Analytics course, 
-part of the Mathematical Engineering in Data Science degree at Pompeu Fabra University.
+part of the Mathematical Engineering in Data Science degree at Pompeu Fabra University. The corpus of documents used is a collection of tweets related to the Farmers
+Protests in 2021.
 
 ## Usage
 The code is executed from the python notebooks located in the ``notebooks/`` folder. To run the code you will need to install the dependencies specified in the ``requirements.txt``file.  
