@@ -79,17 +79,17 @@ def rank_documents(query, documents, inverted_index, tf, idf, filter=None):
 
     # Counter with terms of the query and their respective counts
     query_terms_count = Counter(query)
+    query_norm = la.norm(list(query_terms_count.values()))
 
     # Iterate over each term of the query, without repeating terms (i.e for each distinct element of the query) - TAKE INTO ACCOUNT THAT THE TERM MIGHT NOT EXIST IN THE INDEX
     for index, term in enumerate(query):
         
-        #
-        vectorized_query[index] = query_terms_count[term] / len(query) * idf[term] 
+        vectorized_query[index] = query_terms_count[term] / query_norm * idf[term] 
         
         # For a document to be considered it has to be a candidate document and have the corresponding term
         for doc in (candidate_docs & inverted_index[term]):
-            doc_norm = la.norm(list(Counter(documents[doc]).values())) 
-            vectorized_docs[doc][index] = tf[doc][term] / len(documents[doc]) * idf[term] 
+            doc_norm = la.norm(list(tf[doc].values())) 
+            vectorized_docs[doc][index] = tf[doc][term] / doc_norm * idf[term] 
 
 
     # Compute the cosine simmilary between each document and the input query.
