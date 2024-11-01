@@ -20,21 +20,20 @@ def build_terms(line):
     """
     stemmer = PorterStemmer()
     stop_words = set(stopwords.words("english"))
-    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.' #Does not include hashtag for future purposes
+    symbols_to_remove = '!"$%&\'()*+,-/:;<=>?@[\\]^_`{|}~.'  # Does not include hashtag for future purposes
     url_pattern = re.compile(r'http\S+|www\S+')
-
 
     line = line.lower()  # Convert letters to lowercase
     
     urls = url_pattern.findall(line) # Find urls, save for latter and substitute with nothing
     line = url_pattern.sub('', line)
 
-    line = line.translate(str.maketrans("", "", symbols_to_remove)) #Remove desired punctuation symbols
+    line = line.translate(str.maketrans("", "", symbols_to_remove))  # Remove desired punctuation symbols
     line = line.split()  # Tokenize the text
     line = [word for word in line if word not in stop_words]  # Remove stopwords
     line = [stemmer.stem(word) for word in line]  # Perform stemming
     
-    line.extend(urls) #Add all found urls at the end
+    line.extend(urls)  # Add all found urls at the end
     
     return line
 
@@ -54,10 +53,13 @@ def create_tokenized_dictionary(tweets, csv_file_path):
 
     # Create tokenized dictionary with doc_id as key
     tokenized_dict = {}
+    docid_to_tweetid = {}
+
     for _, row in tweet_mapping.iterrows():
         doc_id = row['docId']
         tweet_id = row['id']
         if tweet_id in tweets:
-            tokenized_dict[doc_id] = build_terms(tweets[tweet_id]._content)
+            tokenized_dict[doc_id] = build_terms(tweets[tweet_id].get_content())
+            docid_to_tweetid[doc_id] = tweet_id
 
-    return tokenized_dict
+    return docid_to_tweetid, tokenized_dict

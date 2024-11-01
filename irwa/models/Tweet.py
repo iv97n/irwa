@@ -63,3 +63,7 @@ class Tweet:
             quoted_tweet=quoted_tweet,
             mentioned_users=tweet_dict.get('mentionedUsers', ''),
         )
+
+    def get_content(self):
+        return self._content
+
