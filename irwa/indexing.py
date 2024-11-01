@@ -1,6 +1,7 @@
 from collections import defaultdict
 import numpy as np
 
+
 def create_inverted_index(token_tweets):
     """
     Creates an inverted index from a collection of tokenized documents.
@@ -43,10 +44,11 @@ def create_inverted_index_tf_idf(documents):
 
     num_documents = len(documents)
     
-    # Dictionary containing as keys the doc_id and as values a dictionary containing as key the term and as value the frequency of the term in the doc_id
+    # Dictionary containing as keys the doc_id and as values a dictionary containing as key the term and as value the
+    # frequency of the term in the doc_id
     tf = defaultdict(lambda: defaultdict(int))
     
-    # Dicitionary containing as keys the terms and as values the document frequency of such terms
+    # Dictionary containing as keys the terms and as values the document frequency of such terms
     df = defaultdict(int)
     
     # Dictionary containing as keys the terms and as values the inverse document frequency of such terms
@@ -57,13 +59,11 @@ def create_inverted_index_tf_idf(documents):
             tf[doc_id][term] += 1
 
     for term, values in inverted_index.items():
-        # The document frequency of a term is the lenght of the set value in the inverted index
+        # The document frequency of a term is the length of the set value in the inverted index
         df[term] = len(values)
         # Compute the idf as the logarithm of the division between the number of documents and the document frequency
         idf[term] = np.round(np.log(float(num_documents / df[term])), 4)
-    
-    
 
-    return  inverted_index, tf, idf
+    return inverted_index, tf, idf
 
             

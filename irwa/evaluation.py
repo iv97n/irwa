@@ -56,7 +56,7 @@ def avg_precision_at_k(doc_score, y_score, k=10):
     if number_of_relevant == 0:
         return 0
     else:
-      return np.sum(prec_at_i_list) / number_of_relevant
+        return np.sum(prec_at_i_list) / number_of_relevant
   
   
 def f1_score(precision, recall):
@@ -76,16 +76,17 @@ def map_at_k(search_res, k=10):
         doc_id: document id.
         predicted_relevance: relevance predicted through LightGBM.
         doc_score: actual score of the document for the query (ground truth).
+    k:
 
     Returns
     -------
     mean average precision @ k : float
     """
     avp = []
-    for q in search_res["query_id"].unique():  # loop over all query id
-        curr_data = search_res[search_res["query_id"] == q]  # select data for current query
+    for q in search_res["query_id"].unique():  # Loop over all query id
+        curr_data = search_res[search_res["query_id"] == q]  # Select data for current query
         avp.append(avg_precision_at_k(np.array(curr_data["is_relevant"]),
-                   np.array(curr_data["predicted_relevance"]), k))  #append average precision for current query
+                   np.array(curr_data["predicted_relevance"]), k))  # Append average precision for current query
     return np.sum(avp) / len(avp), avp  # return mean average precision
 
 
@@ -102,19 +103,27 @@ def rr_at_k(doc_score, y_score, k=10):
     Reciprocal Rank for qurrent query
     """
 
-    order = np.argsort(y_score)[::-1]  # get the list of indexes of the predicted score sorted in descending order.
-    doc_score = np.take(doc_score, order[:k])  # sort the actual relevance label of the documents based on predicted score(hint: np.take) and take first k.
-    if np.sum(doc_score) == 0:  # if there are not relevant doument return 0
+    # Get the list of indexes of the predicted score sorted in descending order.
+    order = np.argsort(y_score)[::-1]
+    # Sort the actual relevance label of the documents based on predicted score(hint: np.take) and take first k.
+    doc_score = np.take(doc_score, order[:k])
+    # If there are no relevant documents return 0
+    if np.sum(doc_score) == 0:
         return 0
-    return 1 / (np.argmax(doc_score == 1) + 1)  # hint: to get the position of the first relevant document use "np.argmax"
+    return 1 / (np.argmax(doc_score == 1) + 1)
 
 
 def dcg_at_k(doc_score, y_score, k=10):
-    order = np.argsort(y_score)[::-1]  # get the list of indexes of the predicted score sorted in descending order.
-    doc_score = np.take(doc_score, order[:k])  # sort the actual relevance label of the documents based on predicted score(hint: np.take) and take first k.
-    gain = 2 ** doc_score - 1  # Compute gain (use formula 7 above)
-    discounts = np.log2(np.arange(len(doc_score)) + 2)  # Compute denominator
-    return np.sum(gain / discounts)  #return dcg@k
+    # Get the list of indexes of the predicted score sorted in descending order.
+    order = np.argsort(y_score)[::-1]
+    # Sort the actual relevance label of the documents based on predicted score(hint: np.take) and take first k.
+    doc_score = np.take(doc_score, order[:k])
+    # Compute gain (use formula 7 above)
+    gain = 2 ** doc_score - 1
+    # Compute denominator
+    discounts = np.log2(np.arange(len(doc_score)) + 2)
+    # Return dcg@k
+    return np.sum(gain / discounts)
 
 
 def ndcg_at_k(doc_score, y_score, k=10):
