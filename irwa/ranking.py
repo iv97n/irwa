@@ -6,7 +6,7 @@ import irwa.preprocessing as ipp
 import irwa.indexing as ind
 
 
-def display_scores_tf_idf(scores, docid_to_tweetid,tweets, n=10):
+def display_scores_tf_idf(scores, docid_to_tweetid, tweets, n=10):
     """
     Displays the top-ranked documents based on their TF-IDF similarity scores.
 
@@ -39,8 +39,8 @@ def conjunctive_filtering(query, documents):
     Function for filtering the documents based on an input cojunctive query
 
     Args:
-        query (string): _description_
-        documents (_type_): _description_
+        query (list): A list of terms representing the input query.
+        documents (_type_): A dictionary with document IDs as keys and lists of terms as values.
         
     Returns:
         Set containing the document ids of the documents that contain all the words of the query
@@ -90,13 +90,13 @@ def rank_documents(query, documents, inverted_index, tf, idf, document_filtering
     query_terms_count = Counter(query)
     query_norm = la.norm(list(query_terms_count.values()))
 
-    # Iterate over each term of the query, without repeating terms (i.e for each distinct element of the query)
+    # Iterate over each term of the query, without repeating terms (i.e. for each distinct element of the query)
     for index, term in enumerate(query):
         
         vectorized_query[index] = query_terms_count[term] / query_norm * idf[term] 
         
         # For a document to be considered it has to be a candidate document and have the corresponding term.
-        # If the term does not exist in the vocabulary it is not considered
+        # If the term does not exist in the vocabulary it is not considered.
         for doc in (candidate_docs & inverted_index.get(term, set())):
             doc_norm = la.norm(list(tf[doc].values())) 
             vectorized_docs[doc][index] = tf[doc][term] / doc_norm * idf[term]
@@ -105,6 +105,6 @@ def rank_documents(query, documents, inverted_index, tf, idf, document_filtering
     doc_scores = [(doc, np.dot(vectorized_doc, vectorized_query)) for doc, vectorized_doc in vectorized_docs.items()]
 
     # Sort the documents by score
-    doc_scores.sort(reverse=True, key=lambda doc_score:doc_score[1])
+    doc_scores.sort(reverse=True, key=lambda doc_score: doc_score[1])
 
     return doc_scores

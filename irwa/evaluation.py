@@ -100,7 +100,7 @@ def rr_at_k(doc_score, y_score, k=10):
 
     Returns
     -------
-    Reciprocal Rank for qurrent query
+    Reciprocal Rank for the current query
     """
 
     # Get the list of indexes of the predicted score sorted in descending order.

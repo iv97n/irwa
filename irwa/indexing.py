@@ -34,9 +34,12 @@ def create_inverted_index_tf_idf(documents):
 
     Returns:
         tuple: A tuple containing:
-            - inverted_index (defaultdict(set)): An inverted index mapping terms to sets of document IDs containing those terms.
-            - tf (defaultdict(defaultdict(int))): A dictionary mapping each document ID to another dictionary that maps terms to their frequencies in that document.
-            - idf (defaultdict(float)): A dictionary mapping terms to their inverse document frequency across all documents.
+            - inverted_index (defaultdict(set)): An inverted index mapping terms to sets of document IDs containing
+            those terms.
+            - tf (defaultdict(defaultdict(int))): A dictionary mapping each document ID to another dictionary that maps
+            terms to their frequencies in that document.
+            - idf (defaultdict(float)): A dictionary mapping terms to their inverse document frequency across all
+            documents.
     """
 
     # Create inverted index
