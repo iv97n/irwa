@@ -6,6 +6,32 @@ import irwa.preprocessing as ipp
 import irwa.indexing as ind
 
 
+
+def conjunctive_filtering(query, documents):
+    """
+    Function for filtering the documents based on an input cojunctive query
+
+    Args:
+        query (list): A list of terms representing the input query.
+        documents (_type_): A dictionary with document IDs as keys and lists of terms as values.
+        
+    Returns:
+        Set containing the document ids of the documents that contain all the words of the query
+    """
+
+    # Set for storing the document id of the documents that contain all the words in the query
+    valid_documents = set()
+
+    for document_id, document_terms in documents.items():
+        if all(query_term in document_terms for query_term in query):
+            valid_documents.add(document_id)
+
+    return valid_documents
+
+
+# Tf-idf functions
+
+
 def display_scores_tf_idf(scores, docid_to_tweetid, tweets, n=10):
     """
     Displays the top-ranked documents based on their TF-IDF similarity scores.
@@ -33,30 +59,7 @@ def display_scores_tf_idf(scores, docid_to_tweetid, tweets, n=10):
         print("------------------------------------------------------------")
         aux += 1
 
-
-def conjunctive_filtering(query, documents):
-    """
-    Function for filtering the documents based on an input cojunctive query
-
-    Args:
-        query (list): A list of terms representing the input query.
-        documents (_type_): A dictionary with document IDs as keys and lists of terms as values.
-        
-    Returns:
-        Set containing the document ids of the documents that contain all the words of the query
-    """
-
-    # Set for storing the document id of the documents that contain all the words in the query
-    valid_documents = set()
-
-    for document_id, document_terms in documents.items():
-        if all(query_term in document_terms for query_term in query):
-            valid_documents.add(document_id)
-
-    return valid_documents
-
-
-def rank_documents(query, documents, inverted_index, tf, idf, document_filtering=None):
+def rank_documents_tf_idf(query, documents, inverted_index, tf, idf, document_filtering=None):
     """
     Function for ranking the documents based on an input query and using the tf-idf as the similarity metric  
 
@@ -108,3 +111,74 @@ def rank_documents(query, documents, inverted_index, tf, idf, document_filtering
     doc_scores.sort(reverse=True, key=lambda doc_score: doc_score[1])
 
     return doc_scores
+
+# Our score functions
+
+def rank_documents_our_score(tweets, docid_to_tweetid, doc_scores, alpha=0.5, k0 =1, k1=1, k2=1, k3=1):
+    """
+    Rank tweets based on TF-IDF similarity with a query and an engagement score.
+
+    Parameters:
+    - query: The search query (string).
+    - tweets: Dictionary of Tweet objects, mapped by tweet IDs.
+    - docid_to_tweetid: Dictionary mapping document IDs to tweet IDs.
+    - tokenized_dict: Dictionary mapping document IDs to tokenized tweet content.
+    - doc_scores: document ID and its similarity score to the query.
+    - alpha: Weight for TF-IDF score in the final score.
+    - beta: Weight for engagement in the final score.
+    - k1, k2: Scaling factors for retweet and quote counts.
+    
+    Returns:
+    - Ranked list of (Tweet, score) tuples.
+    """
+
+    # Initialize list for ranking
+    ranked_tweets = []
+    
+    # Process scores and compute final score
+    for doc_id, similarity_score in doc_scores:
+        tweet_id = docid_to_tweetid[doc_id]
+
+        # Calculate engagement score
+        tweet = tweets[tweet_id]
+        engagement_score = k0 * tweet._like_count + k1 * tweet._retweet_count + k2 * tweet._quote_count + k3 * tweet._reply_count
+
+        
+        # Final score
+        final_score = alpha * similarity_score + (1-alpha) * engagement_score
+        ranked_tweets.append((doc_id, final_score))
+
+     # Extract scores for normalization
+    scores = [score for _, score in ranked_tweets]
+    min_score = min(scores)
+    max_score = max(scores)
+
+    # Apply Min-Max normalization
+    if max_score > min_score:  # Prevent division by zero
+        normalized_ranked_tweets = [
+            (doc_id, (final_score - min_score) / (max_score - min_score))
+            for doc_id, final_score in ranked_tweets
+        ]
+    else:
+        # If all scores are the same, normalize to 0.5
+        normalized_ranked_tweets = [
+            (doc_id, 0.5)  # Arbitrary middle value
+            for doc_id, _ in ranked_tweets
+        ]
+
+    # Sort tweets by normalized score in descending order
+    normalized_ranked_tweets.sort(key=lambda x: x[1], reverse=True)
+    
+    return normalized_ranked_tweets
+
+
+
+
+# BM25
+
+def rank_documents_bm25(tweets):
+
+    #Implementar
+
+    return tweets
+
