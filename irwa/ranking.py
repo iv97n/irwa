@@ -5,6 +5,7 @@ from numpy import linalg as la
 import irwa.preprocessing as ipp
 import irwa.indexing as ind
 
+import csv
 
 
 def conjunctive_filtering(query, documents):
@@ -119,14 +120,11 @@ def rank_documents_our_score(tweets, docid_to_tweetid, doc_scores, alpha=0.5, k0
     Rank tweets based on TF-IDF similarity with a query and an engagement score.
 
     Parameters:
-    - query: The search query (string).
-    - tweets: Dictionary of Tweet objects, mapped by tweet IDs.
+    - tweets: Dictionary of Tweet objects.
     - docid_to_tweetid: Dictionary mapping document IDs to tweet IDs.
-    - tokenized_dict: Dictionary mapping document IDs to tokenized tweet content.
     - doc_scores: document ID and its similarity score to the query.
-    - alpha: Weight for TF-IDF score in the final score.
-    - beta: Weight for engagement in the final score.
-    - k1, k2: Scaling factors for retweet and quote counts.
+    - alpha: Weight for TF-IDF and engagement score in the final score.
+    - k0, k1, k2, k3: Scaling factors for retweet and quote counts.
     
     Returns:
     - Ranked list of (Tweet, score) tuples.
@@ -176,9 +174,79 @@ def rank_documents_our_score(tweets, docid_to_tweetid, doc_scores, alpha=0.5, k0
 
 # BM25
 
-def rank_documents_bm25(tweets):
+def calculate_avgdl(documents):
+    """Helper function to calculate average document length."""
+    total_length = sum(len(doc) for doc in documents.values())
+    return total_length / len(documents) if documents else 0
 
-    #Implementar
 
-    return tweets
 
+def rank_documents_bm25(query, documents, inverted_index, tf, idf, k1=1.2, b=0.75):
+    """
+    Rank documents using the BM25 score based on the query and document statistics.
+
+    Args:
+        query : tokenized input query.
+        documents (dict): A dictionary with document IDs as keys and lists of terms as values.
+        inverted_index (defaultdict(set)): An inverted index with terms as keys and sets of document IDs where those terms appear.
+        tf (defaultdict(defaultdict(int))): Term frequency dictionary mapping document IDs to another dictionary that maps terms to their frequency in that document.
+        idf (defaultdict(float)): Inverse document frequency dictionary mapping terms to their IDF values.
+        k1 (float): BM25 parameter for term frequency scaling.
+        b (float): BM25 parameter for document length normalization.
+
+    Returns:
+        list: A list of tuples where each tuple contains a document ID and its BM25 score, sorted by score in descending order.
+    """
+    
+    # Calculate the average document length across all documents
+    avgdl = calculate_avgdl(documents)
+    
+    # Dictionary to store the BM25 score for each document
+    doc_scores = defaultdict(float)
+    
+    for index, term in enumerate(query):
+        if term not in inverted_index:
+            continue
+
+        # Get the inverse document frequency for the term
+        term_idf = idf[term]
+
+        for doc_id in inverted_index[term]:
+            # Term frequency of the term in the document
+            term_freq = tf[doc_id][term]
+            
+            # Document length
+            doc_length = len(documents[doc_id])
+            
+            # BM25 score calculation
+            score = term_idf * ((term_freq * (k1 + 1)) / (k1 * ((1 - b) + b * (doc_length / avgdl)) + term_freq))
+            
+            # Accumulate the score for the document
+            doc_scores[doc_id] += score
+
+    # Sort documents by their BM25 score in descending order
+    ranked_docs = sorted(doc_scores.items(), key=lambda item: item[1], reverse=True)
+    
+    return ranked_docs
+
+
+
+def save_scores_to_csv(doc_scores, filename):
+    """
+    Save document scores to a CSV file.
+
+    Args:
+        doc_scores (list): A list of tuples where each tuple contains a document ID and its score.
+        filename (str): The name of the CSV file to save the results to.
+    """
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write header
+        writer.writerow(["Document ID", "Score"])
+        
+        # Write document scores
+        for doc_id, score in doc_scores:
+            writer.writerow([doc_id, score])
+
+    print(f"Results saved to {filename}")
