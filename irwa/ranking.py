@@ -5,7 +5,6 @@ from numpy import linalg as la
 import irwa.preprocessing as ipp
 import irwa.indexing as ind
 
-import csv
 
 
 def conjunctive_filtering(query, documents):
@@ -175,7 +174,6 @@ def rank_documents_our_score(tweets, docid_to_tweetid, doc_scores, alpha=0.5, k0
 # BM25
 
 def calculate_avgdl(documents):
-    """Helper function to calculate average document length."""
     total_length = sum(len(doc) for doc in documents.values())
     return total_length / len(documents) if documents else 0
 
@@ -229,24 +227,3 @@ def rank_documents_bm25(query, documents, inverted_index, tf, idf, k1=1.2, b=0.7
     
     return ranked_docs
 
-
-
-def save_scores_to_csv(doc_scores, filename):
-    """
-    Save document scores to a CSV file.
-
-    Args:
-        doc_scores (list): A list of tuples where each tuple contains a document ID and its score.
-        filename (str): The name of the CSV file to save the results to.
-    """
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        
-        # Write header
-        writer.writerow(["Document ID", "Score"])
-        
-        # Write document scores
-        for doc_id, score in doc_scores:
-            writer.writerow([doc_id, score])
-
-    print(f"Results saved to {filename}")
