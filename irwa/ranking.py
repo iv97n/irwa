@@ -169,11 +169,18 @@ def rank_documents_our_score(tweets, docid_to_tweetid, doc_scores, alpha=0.5, k0
     return normalized_ranked_tweets
 
 
-
-
-# BM25
-
 def calculate_avgdl(documents):
+    """
+    Calculate the average document length (avgdl) for a collection of documents.
+
+    Args:
+        documents (dict): A dictionary of documents, where each key is a document 
+                          ID (e.g., a string or integer) and each value is a list of 
+                          terms in the document.
+
+    Returns:
+        float: The average document length, or 0 if there are no documents.
+    """
     total_length = sum(len(doc) for doc in documents.values())
     return total_length / len(documents) if documents else 0
 
