@@ -234,3 +234,55 @@ def rank_documents_bm25(query, documents, inverted_index, tf, idf, k1=1.2, b=0.7
     
     return ranked_docs
 
+def create_tweet2vec(token_tweets, model):
+    """
+    Converts each tweet into a unique vector representation by averaging the vectors 
+    of the words it contains, using a trained Word2Vec model.
+
+    Parameters:
+    token_tweets (dict): Dictionary where keys are document IDs and values are lists of tokenized words in each tweet.
+    model (gensim.models.Word2Vec): Trained Word2Vec model used to generate word vectors.
+
+    Returns:
+    dict: A dictionary where keys are document IDs and values are the averaged word vectors representing each tweet.
+    """
+    
+    tweet2vec = dict()
+    for doc_id in token_tweets:
+        tweet_vectors = [model.wv[word] for word in token_tweets[doc_id] if word in model.wv]
+        if len(tweet_vectors)!=0:
+            tweet2vec[doc_id] = sum(tweet_vectors) / len(tweet_vectors)
+    return tweet2vec
+
+
+def tweet2vec_cossim(tweet2vec, model, query):
+    """
+    Calculates the cosine similarity between a given query and each tweet vector 
+    in a collection, returning sorted similarity scores.
+
+    Parameters:
+    tweet2vec (dict): Dictionary where keys are document IDs and values are vector representations of each tweet.
+    model (gensim.models.Word2Vec): Trained Word2Vec model used to generate word vectors.
+    query (list of str): List of words representing the query.
+
+    Returns:
+    list of tuples: A sorted list of tuples, where each tuple contains a document ID 
+                    and the cosine similarity score between the query and the tweet.
+                    Sorted in descending order of similarity.
+    """
+    
+    # Vectorize the query
+    query_vectors = [model.wv[word] for word in query if word in model.wv]
+    if len(query_vectors)==0: 
+        print("THE QUERY CANNOT BE VECTORIZED WITH THE CURRENT MODEL")
+        return 0
+    query_vect = sum(query_vectors) / len(query_vectors)
+    query_norm = la.norm(query_vect)
+
+    # Compute the cosine similarity between each document and the input query.    
+    doc_scores = [(doc, np.dot(vectorized_doc/la.norm(vectorized_doc), query_vect/query_norm)) for doc, vectorized_doc in tweet2vec.items()]
+
+    # Sort the documents by score
+    doc_scores.sort(reverse=True, key=lambda doc_score: doc_score[1])
+
+    return doc_scores
