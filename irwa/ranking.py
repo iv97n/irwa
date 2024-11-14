@@ -32,7 +32,7 @@ def conjunctive_filtering(query, documents):
 # Tf-idf functions
 
 
-def display_scores_tf_idf(scores, docid_to_tweetid, tweets, n=10):
+def display_scores(scores, docid_to_tweetid, tweets, n=10):
     """
     Displays the top-ranked documents based on their TF-IDF similarity scores.
 
@@ -210,6 +210,7 @@ def rank_documents_bm25(query, documents, inverted_index, tf, idf, k1=1.2, b=0.7
     doc_scores = defaultdict(float)
     
     for index, term in enumerate(query):
+        # Omit the term if it is not present in the document corpus
         if term not in inverted_index:
             continue
 
@@ -234,7 +235,7 @@ def rank_documents_bm25(query, documents, inverted_index, tf, idf, k1=1.2, b=0.7
     
     return ranked_docs
 
-def create_tweet2vec(token_tweets, model):
+def tweet2vec(token_tweets, model):
     """
     Converts each tweet into a unique vector representation by averaging the vectors 
     of the words it contains, using a trained Word2Vec model.
@@ -247,21 +248,23 @@ def create_tweet2vec(token_tweets, model):
     dict: A dictionary where keys are document IDs and values are the averaged word vectors representing each tweet.
     """
     
-    tweet2vec = dict()
+    tweet2vec_dict = dict()
     for doc_id in token_tweets:
+        # Vectorize each of the tokens of the document
         tweet_vectors = [model.wv[word] for word in token_tweets[doc_id] if word in model.wv]
+        # Compute the average of the vectorized tokens of the document
         if len(tweet_vectors)!=0:
-            tweet2vec[doc_id] = sum(tweet_vectors) / len(tweet_vectors)
-    return tweet2vec
+            tweet2vec_dict[doc_id] = sum(tweet_vectors) / len(tweet_vectors)
+    return tweet2vec_dict
 
 
-def tweet2vec_cossim(tweet2vec, model, query):
+def tweet2vec_cossim(tweet2vec_dict, model, query):
     """
     Calculates the cosine similarity between a given query and each tweet vector 
     in a collection, returning sorted similarity scores.
 
     Parameters:
-    tweet2vec (dict): Dictionary where keys are document IDs and values are vector representations of each tweet.
+    tweet2vec_dict (dict): Dictionary where keys are document IDs and values are vector representations of each tweet.
     model (gensim.models.Word2Vec): Trained Word2Vec model used to generate word vectors.
     query (list of str): List of words representing the query.
 
@@ -280,7 +283,7 @@ def tweet2vec_cossim(tweet2vec, model, query):
     query_norm = la.norm(query_vect)
 
     # Compute the cosine similarity between each document and the input query.    
-    doc_scores = [(doc, np.dot(vectorized_doc/la.norm(vectorized_doc), query_vect/query_norm)) for doc, vectorized_doc in tweet2vec.items()]
+    doc_scores = [(doc, np.dot(vectorized_doc/la.norm(vectorized_doc), query_vect/query_norm)) for doc, vectorized_doc in tweet2vec_dict.items()]
 
     # Sort the documents by score
     doc_scores.sort(reverse=True, key=lambda doc_score: doc_score[1])
